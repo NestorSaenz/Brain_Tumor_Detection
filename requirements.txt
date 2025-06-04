@@ -1,9 +1,9 @@
 streamlit==1.45.1
-tensorflow
+tensorflow==2.10.0  # Última versión compatible con Python 3.9 sin problemas
 protobuf==3.20.3
-numpy
-pillow
-requests
-scikit-learn
-matplotlib
-pandas
+numpy==1.23.5       # Evita conflictos con TensorFlow
+pillow==9.5.0
+requests==2.31.0
+scikit-learn==1.2.2
+matplotlib==3.7.1
+pandas==1.5.3
