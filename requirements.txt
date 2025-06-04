@@ -1,5 +1,5 @@
 streamlit==1.45.1
-tensorflow-cpu==2.10.0  # Versión compatible garantizada
+tensorflow-cpu==2.9.0  # Versión compatible garantizada
 protobuf==3.20.3
 numpy==1.23.5
 pillow==9.5.0
