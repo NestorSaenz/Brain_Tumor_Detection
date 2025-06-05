@@ -1,4 +1,4 @@
-import streamlit as st
+import streamlit_app as st
 import numpy as np
 from PIL import Image
 import tensorflow as tf
