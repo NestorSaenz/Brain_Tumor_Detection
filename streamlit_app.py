@@ -8,7 +8,7 @@ import os
 import gdown
 import requests
 
-MODEL_URL = "https://drive.google.com/file/d/15TvDCVIne0eect8Rc9IcLyehdao48fvl/view?usp=sharing" 
+MODEL_URL = "https://drive.google.com/uc?id=15TvDCVIne0eect8Rc9IcLyehdao48fvl" 
 MODEL_PATH = "best_resnet_model.h5"
 
 def download_model():
