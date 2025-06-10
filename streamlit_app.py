@@ -1,101 +1,79 @@
 import streamlit as st
 import numpy as np
-from PIL import Image
-import tensorflow as tf
-from tensorflow.keras.models import load_model
-from tensorflow.keras.applications.resnet50 import preprocess_input
 import os
 import gdown
-import requests
+from tensorflow import keras
+from tensorflow.keras.applications.resnet import preprocess_input
+from PIL import Image
 
-MODEL_URL = "https://drive.google.com/uc?id=15TvDCVIne0eect8Rc9IcLyehdao48fvl" 
-MODEL_PATH = "best_resnet_model.h5"
+# --- CONSTANTES ---
+MODEL_FILENAME = "best_resnet_model.h5"
+GDRIVE_ID = "15TvDCVIne0eect8Rc9IcLyehdao48fvl"  # Usa tu ID real
+IMG_SIZE = (224, 224)
+CLASS_NAMES = ['Healthy', 'Tumor']
 
-def download_model():
-    if not os.path.exists(MODEL_PATH):
-        gdown.download(MODEL_URL, MODEL_PATH, quiet=False)
-    # Verifica tamaño mínimo (por ejemplo, 10 MB)
-    if os.path.exists(MODEL_PATH) and os.path.getsize(MODEL_PATH) < 10_000_000:
-        raise RuntimeError("El modelo no se descargó correctamente. Intenta recargar la app.")
-download_model()
-
-# Configuración de la página
-st.set_page_config(
-    page_title="Brain Tumor Detection",
-    page_icon="🧠",
-    layout="centered",
-    initial_sidebar_state="expanded"
-)
-
-# Título y descripción
-st.markdown(
-    """
-    <style>
-    .main-title {font-size:3em; font-weight:bold; color:#4F8BF9;}
-    .subtitle {font-size:1.3em; color:#333;}
-    .footer {font-size:0.9em; color:#888; margin-top: 2em;}
-    .stButton>button {background-color: #4F8BF9; color: white;}
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-st.markdown('<div class="main-title">🧠 Brain Tumor Detection</div>', unsafe_allow_html=True)
-st.markdown('<div class="subtitle">Sube una imagen de resonancia magnética cerebral (MRI) y el modelo clasificará si hay presencia de tumor.</div>', unsafe_allow_html=True)
-
-# Cargar el modelo (usa cache para eficiencia)
+# --- FUNCIONES ---
 @st.cache_resource
-def load_brain_model():
-    return load_model(MODEL_PATH)
-
-model = load_brain_model()
-
-# Sidebar
-st.sidebar.image("https://cdn-icons-png.flaticon.com/512/2920/2920244.png", width=120)
-st.sidebar.title("Opciones")
-st.sidebar.markdown(
-    """
-    - Formato recomendado: JPG, PNG
-    - Tamaño de entrada: 224x224 px
-    - Modelo: ResNet50 Fine-Tuned
-    """
-)
-
-# Subida de imagen
-uploaded_file = st.file_uploader("Selecciona una imagen de MRI cerebral", type=["jpg", "jpeg", "png"])
+def load_model():
+    if not os.path.exists(MODEL_FILENAME):
+        url = f"https://drive.google.com/uc?id={GDRIVE_ID}"
+        gdown.download(url, MODEL_FILENAME, quiet=False)
+    # Verifica tamaño mínimo (por ejemplo, 10 MB)
+    if os.path.exists(MODEL_FILENAME) and os.path.getsize(MODEL_FILENAME) < 10_000_000:
+        raise RuntimeError("El modelo no se descargó correctamente. Intenta recargar la app.")
+    model = keras.models.load_model(MODEL_FILENAME)
+    return model
 
 def preprocess_image(image: Image.Image):
-    img = image.convert("RGB").resize((224, 224))
+    img = image.convert("RGB").resize(IMG_SIZE)
     img_array = np.array(img)
-    img_array = preprocess_input(img_array)
-    return np.expand_dims(img_array, axis=0)
+    img_array_expanded = np.expand_dims(img_array, axis=0)
+    return preprocess_input(img_array_expanded)
 
-if uploaded_file is not None:
-    image = Image.open(uploaded_file)
-    st.image(image, caption="Imagen cargada", use_container_width=True)
-    st.markdown("---")
-    st.write("Procesando imagen...")
+# --- CARGA DEL MODELO UNA VEZ ---
+model = load_model()
 
-    # Preprocesar y predecir
-    img_batch = preprocess_image(image)
-    prediction = model.predict(img_batch)
-    prob = float(prediction[0][0])
-    label = "Tumor" if prob > 0.5 else "Healthy"
-    color = "#e74c3c" if label == "Tumor" else "#27ae60"
-    st.markdown(
-        f'<h2 style="color:{color};text-align:center;">Resultado: {label}</h2>',
-        unsafe_allow_html=True
-    )
-    st.progress(int(prob*100) if label == "Tumor" else int((1-prob)*100))
-    st.markdown(
-        f"<div style='text-align:center;'>Probabilidad de tumor: <b>{prob*100:.2f}%</b></div>" if label == "Tumor"
-        else f"<div style='text-align:center;'>Probabilidad de estar sano: <b>{(1-prob)*100:.2f}%</b></div>",
-        unsafe_allow_html=True
-    )
-else:
-    st.info("Por favor, sube una imagen de MRI cerebral para analizar.")
-
-# Footer
+# --- TÍTULO ---
 st.markdown(
-    '<div class="footer">Desarrollado por tu equipo de IA | Proyecto Bootcamp 2025</div>',
+    "<h2 style='text-align: center;'>🧠 Detección de Tumores Cerebrales por Deep Learning</h2><br>",
     unsafe_allow_html=True
 )
+
+# --- DISEÑO EN 3 COLUMNAS ---
+col1, col_mid, col2 = st.columns([1, 0.1, 1])
+
+with col1:
+    uploaded_file = st.file_uploader("📤 Sube una imagen de resonancia magnética", type=["png", "jpg", "jpeg"])
+    if uploaded_file:
+        predict_btn = st.button("🔍 Predecir")
+
+with col2:
+    if uploaded_file:
+        image = Image.open(uploaded_file).convert("RGB")
+        st.image(image, use_column_width=True)
+        if predict_btn:
+            img_preprocessed = preprocess_image(image)
+            prediction_probs = model.predict(img_preprocessed)
+            prob_tumor = prediction_probs[0][0]
+
+            if prob_tumor >= 0.5:
+                predicted_class = CLASS_NAMES[1]
+                confidence = prob_tumor * 100
+            else:
+                predicted_class = CLASS_NAMES[0]
+                confidence = (1 - prob_tumor) * 100
+
+            # Mostrar resultados justo debajo de la imagen
+            st.markdown("#### 🧾 Resultado del diagnóstico")
+            st.markdown(f"**Predicción:** {predicted_class}")
+            st.markdown(f"**Confianza:** {confidence:.2f}%")
+
+# --- ESTILO PARA IMAGEN ---
+st.markdown("""
+<style>
+img {
+    max-height: 300px !important;
+    object-fit: contain;
+}
+</style>
+""", unsafe_allow_html=True)
