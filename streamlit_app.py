@@ -8,7 +8,7 @@ from PIL import Image
 
 # --- CONSTANTES ---
 MODEL_FILENAME = "best_resnet_model.h5"
-GDRIVE_ID = "15TvDCVIne0eect8Rc9IcLyehdao48fvl"  # Usa tu ID real
+GDRIVE_ID = "15TvDCVIne0eect8Rc9IcLyehdao48fvl"  
 IMG_SIZE = (224, 224)
 CLASS_NAMES = ['Healthy', 'Tumor']
 
