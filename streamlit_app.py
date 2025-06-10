@@ -5,6 +5,7 @@ import tensorflow as tf
 from tensorflow.keras.models import load_model
 from tensorflow.keras.applications.resnet50 import preprocess_input
 import os
+import gdown
 import requests
 
 MODEL_URL = "https://drive.google.com/file/d/15TvDCVIne0eect8Rc9IcLyehdao48fvl/view?usp=sharing" 
@@ -12,11 +13,7 @@ MODEL_PATH = "best_resnet_model.h5"
 
 def download_model():
     if not os.path.exists(MODEL_PATH):
-        r = requests.get(MODEL_URL, stream=True)
-        with open(MODEL_PATH, "wb") as f:
-            for chunk in r.iter_content(chunk_size=8192):
-                if chunk:
-                    f.write(chunk)
+        gdown.download(MODEL_URL, MODEL_PATH, quiet=False)
 
 download_model()
 
