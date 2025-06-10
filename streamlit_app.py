@@ -14,7 +14,9 @@ MODEL_PATH = "best_resnet_model.h5"
 def download_model():
     if not os.path.exists(MODEL_PATH):
         gdown.download(MODEL_URL, MODEL_PATH, quiet=False)
-
+    # Verifica tamaño mínimo (por ejemplo, 10 MB)
+    if os.path.exists(MODEL_PATH) and os.path.getsize(MODEL_PATH) < 10_000_000:
+        raise RuntimeError("El modelo no se descargó correctamente. Intenta recargar la app.")
 download_model()
 
 # Configuración de la página
